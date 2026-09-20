@@ -94,6 +94,47 @@ describe("FileContentViewer", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders fenced rich-view code with a single visual container", async () => {
+    const markdown = [
+      "# Example",
+      "",
+      "```ts",
+      "const answer = 42;",
+      "```",
+    ].join("\n");
+    const bytes = new TextEncoder().encode(markdown);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => Promise.resolve(bytes.buffer),
+    });
+
+    renderViewer("README.md");
+
+    const preview = await screen.findByTestId("file-content-viewer-markdown");
+    expect(preview.querySelector("pre")).toBeNull();
+    const highlightedBlock = preview.querySelector(".rounded-lg");
+    expect(highlightedBlock).not.toBeNull();
+    expect(highlightedBlock).toHaveTextContent("const answer = 42;");
+  });
+
+  it("keeps one code-owned pre for an unlabelled multiline fence", async () => {
+    const markdown = ["```", "line one", "line two", "```"].join("\n");
+    const bytes = new TextEncoder().encode(markdown);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => Promise.resolve(bytes.buffer),
+    });
+
+    renderViewer("README.md");
+
+    const preview = await screen.findByTestId("file-content-viewer-markdown");
+    expect(preview.querySelectorAll("pre")).toHaveLength(1);
+    expect(preview.querySelector("pre pre")).toBeNull();
+    expect(preview.querySelector("pre")).toHaveTextContent("line one");
+  });
+
   // The acceptance criteria require the clear message in BOTH view modes. The
   // plain-mode fallback and the rich-mode binary branch both route through
   // UnpreviewableFallback, so one parametrized spec covers both code paths.
