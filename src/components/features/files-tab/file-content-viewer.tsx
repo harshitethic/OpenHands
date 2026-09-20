@@ -202,6 +202,15 @@ export function FileContentViewer({ path, viewMode }: FileContentViewerProps) {
             content={text ?? ""}
             includeStandard
             includeHeadings
+            components={{
+              // The markdown code renderer already owns the visual block:
+              // language fences render a SyntaxHighlighter container and
+              // plain multiline fences render their own <pre>. Dropping
+              // react-markdown's outer <pre> here prevents the typography
+              // wrapper from adding a second background, border, and padding
+              // around rich-view code blocks.
+              pre: ({ children }) => <>{children}</>,
+            }}
           />
         </div>
       </div>
