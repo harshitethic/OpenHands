@@ -98,7 +98,7 @@ function automationMatchesQuery(
   const queryTerms = rawQuery
     .trim()
     .toLowerCase()
-    .split(/\\s+/)
+    .split(/\s+/)
     .filter(Boolean);
   if (queryTerms.length === 0) return true;
 
