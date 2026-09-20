@@ -307,6 +307,57 @@ describe("recommended automations", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("matches multi-keyword searches regardless of word order", () => {
+    const { rerender } = render(
+      <RecommendedAutomationsSection
+        backendKind="local"
+        installedServers={[]}
+        query="jira github"
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId("recommended-automation-card-jira-issue-to-pr"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("recommended-automation-card-jira-issue-to-gitlab-mr"),
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <RecommendedAutomationsSection
+        backendKind="local"
+        installedServers={[]}
+        query="  GITHUB   jira  "
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId("recommended-automation-card-jira-issue-to-pr"),
+    ).toBeInTheDocument();
+  });
+
+  it("matches keywords across automation fields", () => {
+    render(
+      <RecommendedAutomationsSection
+        backendKind="local"
+        installedServers={[]}
+        query="incident updates"
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByTestId(
+        "recommended-automation-card-incident-retrospective-drafter",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("recommended-automation-card-github-pr-reviewer"),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows a left-aligned MCP icon stack on each card", () => {
     render(
       <RecommendedAutomationsSection
