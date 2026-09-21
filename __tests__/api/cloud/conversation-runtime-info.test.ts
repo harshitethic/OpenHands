@@ -60,6 +60,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it("keeps setup-owned localStorage usable after test-local global cleanup", () => {
+  vi.stubGlobal("__TEMP_TEST_GLOBAL__", true);
+  vi.unstubAllGlobals();
+
+  localStorage.setItem("storage-survives", "yes");
+  expect(localStorage.getItem("storage-survives")).toBe("yes");
+  localStorage.clear();
+  expect(localStorage.getItem("storage-survives")).toBeNull();
+});
+
 describe("AgentServerConversationService.getRuntimeConversation", () => {
   describe("cloud mode", () => {
     beforeEach(() => {
