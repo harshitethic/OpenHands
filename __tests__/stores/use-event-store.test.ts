@@ -8,6 +8,7 @@ import {
   SecurityRisk,
 } from "#/types/agent-server/core";
 import { StreamingDeltaEvent } from "#/types/agent-server/core/events/streaming-delta-event";
+import type { ACPToolCallEvent } from "#/types/agent-server/core/events/acp-tool-call-event";
 
 const mockUserMessageEvent: MessageEvent = {
   id: "test-event-1",
@@ -255,6 +256,76 @@ describe("useEventStore", () => {
     expect(result.current.uiEvents).toEqual([
       mockUserMessageEvent,
       mockObservationEvent,
+    ]);
+  });
+
+  it("replays UI replacement when older pagination inserts an action after its observation", () => {
+    const { result } = renderHook(() => useEventStore());
+    const action: ActionEvent = {
+      ...mockActionEvent,
+      id: "page-action",
+      timestamp: "2024-01-01T00:00:00Z",
+      tool_call_id: "page-call",
+      tool_call: {
+        ...mockActionEvent.tool_call,
+        id: "page-call",
+      },
+    };
+    const observation: ObservationEvent = {
+      ...mockObservationEvent,
+      id: "page-observation",
+      timestamp: "2024-01-01T00:00:01Z",
+      tool_call_id: "page-call",
+      action_id: "page-action",
+    };
+
+    act(() => {
+      // Newest page can contain the observation while the older action has not
+      // been fetched yet.
+      result.current.addEvent(observation);
+      result.current.addEvents([action]);
+    });
+
+    expect(result.current.events.map((event) => event.id)).toEqual([
+      "page-action",
+      "page-observation",
+    ]);
+    expect(result.current.uiEvents.map((event) => event.id)).toEqual([
+      "page-observation",
+    ]);
+  });
+
+  it("keeps the terminal ACP tool event when its older started event arrives later", () => {
+    const { result } = renderHook(() => useEventStore());
+    const started: ACPToolCallEvent = {
+      id: "acp-started",
+      kind: "ACPToolCallEvent",
+      timestamp: "2024-01-01T00:00:00Z",
+      source: "agent",
+      tool_call_id: "acp-call",
+      title: "echo hello",
+      status: "in_progress",
+      tool_kind: "execute",
+      raw_input: { command: "echo hello" },
+      raw_output: null,
+      content: null,
+      is_error: false,
+    };
+    const completed: ACPToolCallEvent = {
+      ...started,
+      id: "acp-completed",
+      timestamp: "2024-01-01T00:00:01Z",
+      status: "completed",
+      raw_output: "hello",
+    };
+
+    act(() => {
+      result.current.addEvent(completed);
+      result.current.addEvents([started]);
+    });
+
+    expect(result.current.uiEvents.map((event) => event.id)).toEqual([
+      "acp-completed",
     ]);
   });
 
