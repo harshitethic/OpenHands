@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useEffect } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   FileDiffViewer,
@@ -15,6 +16,43 @@ const MOCK_MD_DIFF = {
 let mockDiff = MOCK_DIFF;
 let mockIsSuccess = true;
 let mockIsLoading = false;
+let originalModelDisposed = false;
+let modifiedModelDisposed = false;
+let onDiffEditorDispose: (() => void) | null = null;
+
+const mockOriginalModel = {
+  isDisposed: vi.fn(() => originalModelDisposed),
+  dispose: vi.fn(() => {
+    originalModelDisposed = true;
+  }),
+};
+const mockModifiedModel = {
+  isDisposed: vi.fn(() => modifiedModelDisposed),
+  dispose: vi.fn(() => {
+    modifiedModelDisposed = true;
+  }),
+};
+const mockOriginalEditor = {
+  getContentHeight: vi.fn(() => 100),
+  onDidContentSizeChange: vi.fn(() => ({ dispose: vi.fn() })),
+};
+const mockModifiedEditor = {
+  getContentHeight: vi.fn(() => 100),
+  onDidContentSizeChange: vi.fn(() => ({ dispose: vi.fn() })),
+};
+const mockDiffEditor = {
+  getModel: vi.fn(() => ({
+    original: mockOriginalModel,
+    modified: mockModifiedModel,
+  })),
+  setModel: vi.fn(),
+  getOriginalEditor: vi.fn(() => mockOriginalEditor),
+  getModifiedEditor: vi.fn(() => mockModifiedEditor),
+  onDidDispose: vi.fn((callback: () => void) => {
+    onDiffEditorDispose = callback;
+    return { dispose: vi.fn() };
+  }),
+};
 
 vi.mock("#/hooks/query/use-unified-git-diff", () => ({
   useUnifiedGitDiff: () => ({
@@ -26,9 +64,33 @@ vi.mock("#/hooks/query/use-unified-git-diff", () => ({
 }));
 
 vi.mock("@monaco-editor/react", () => ({
-  DiffEditor: (props: Record<string, unknown>) => (
-    <div data-testid="file-diff-viewer" data-original={props.original} data-modified={props.modified} />
-  ),
+  DiffEditor: (props: Record<string, unknown>) => {
+    useEffect(() => {
+      const onMount = props.onMount as
+        | ((editor: typeof mockDiffEditor) => void)
+        | undefined;
+      onMount?.(mockDiffEditor);
+
+      return () => {
+        // Mirror @monaco-editor/react's ownership contract closely enough to
+        // catch this regression: with keepCurrent* false it would dispose the
+        // models before the widget. The viewer must opt out and own disposal.
+        if (!props.keepCurrentOriginalModel) mockOriginalModel.dispose();
+        if (!props.keepCurrentModifiedModel) mockModifiedModel.dispose();
+        onDiffEditorDispose?.();
+      };
+    }, [props.keepCurrentModifiedModel, props.keepCurrentOriginalModel]);
+
+    return (
+      <div
+        data-testid="file-diff-viewer"
+        data-original={props.original}
+        data-modified={props.modified}
+        data-keep-original={String(Boolean(props.keepCurrentOriginalModel))}
+        data-keep-modified={String(Boolean(props.keepCurrentModifiedModel))}
+      />
+    );
+  },
   Editor: (props: Record<string, unknown>) => (
     <div data-testid="file-single-viewer" data-value={props.value} />
   ),
@@ -49,6 +111,10 @@ describe("FileDiffViewer", () => {
     mockDiff = MOCK_DIFF;
     mockIsSuccess = true;
     mockIsLoading = false;
+    originalModelDisposed = false;
+    modifiedModelDisposed = false;
+    onDiffEditorDispose = null;
+    vi.clearAllMocks();
   });
 
   it("caps opened editor panes at 600px", () => {
@@ -87,6 +153,23 @@ describe("FileDiffViewer", () => {
 
     expect(screen.getByTestId("file-diff-viewer")).toBeInTheDocument();
     expect(screen.queryByTestId("file-single-viewer")).not.toBeInTheDocument();
+  });
+
+  it("detaches retained Monaco diff models before disposing them on unmount", async () => {
+    const { unmount } = render(
+      <FileDiffViewer path="src/index.ts" type="M" isExpanded />,
+    );
+
+    const diffEditor = screen.getByTestId("file-diff-viewer");
+    expect(diffEditor).toHaveAttribute("data-keep-original", "true");
+    expect(diffEditor).toHaveAttribute("data-keep-modified", "true");
+    await waitFor(() => expect(mockDiffEditor.getModel).toHaveBeenCalled());
+
+    unmount();
+
+    expect(mockDiffEditor.setModel).toHaveBeenCalledWith(null);
+    expect(mockOriginalModel.dispose).toHaveBeenCalledTimes(1);
+    expect(mockModifiedModel.dispose).toHaveBeenCalledTimes(1);
   });
 
   it("switches to single editor on 'new' mode", async () => {
