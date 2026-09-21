@@ -297,7 +297,7 @@ export function EditAutomationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
@@ -306,24 +306,34 @@ export function EditAutomationModal({
         }}
         role="presentation"
       />
-      <div className="relative w-full max-w-md rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface)] p-6">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 text-muted hover:text-foreground"
-          aria-label={t(I18nKey.AUTOMATIONS$CANCEL)}
-        >
-          <XMarkIcon className="size-5" />
-        </button>
+      <div
+        data-testid="edit-automation-dialog"
+        className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface)]"
+      >
+        <div className="relative shrink-0 px-6 pt-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-6 top-6 text-muted hover:text-foreground"
+            aria-label={t(I18nKey.AUTOMATIONS$CANCEL)}
+          >
+            <XMarkIcon className="size-5" />
+          </button>
 
-        <h2 className={modalTitleLgMediumClassName}>{editTitle}</h2>
+          <h2 className={modalTitleLgMediumClassName}>{editTitle}</h2>
+        </div>
 
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="mt-4 flex flex-col gap-4"
+          className="flex min-h-0 flex-1 flex-col"
           aria-label={editTitle}
         >
+          <div
+            data-testid="edit-automation-scroll-region"
+            className="mt-4 min-h-0 flex-1 overflow-y-auto px-6 pb-4"
+          >
+            <div className="flex flex-col gap-4">
           {nameSpec.present && (
             <SettingsInput
               testId="edit-automation-name"
@@ -526,7 +536,13 @@ export function EditAutomationModal({
             </>
           ) : null}
 
-          <div className="mt-2 flex justify-end gap-3">
+            </div>
+          </div>
+
+          <div
+            data-testid="edit-automation-footer"
+            className="flex shrink-0 justify-end gap-3 border-t border-[var(--oh-border)] px-6 py-4"
+          >
             <BrandButton
               testId="edit-automation-cancel"
               type="button"
