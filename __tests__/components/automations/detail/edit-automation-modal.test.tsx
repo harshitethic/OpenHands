@@ -192,6 +192,29 @@ beforeEach(() => {
   });
 });
 
+describe("EditAutomationModal — viewport containment", () => {
+  it("keeps chrome fixed while the form body owns overflow", () => {
+    renderModal(dailyAutomation);
+
+    expect(screen.getByTestId("edit-automation-dialog")).toHaveClass(
+      "max-h-[calc(100dvh-2rem)]",
+      "flex",
+      "flex-col",
+      "overflow-hidden",
+    );
+    expect(screen.getByTestId("edit-automation-scroll-region")).toHaveClass(
+      "min-h-0",
+      "flex-1",
+      "overflow-y-auto",
+    );
+    expect(screen.getByTestId("edit-automation-footer")).toHaveClass(
+      "shrink-0",
+    );
+    expect(screen.getByTestId("edit-automation-save")).toBeInTheDocument();
+    expect(screen.getByTestId("edit-automation-cancel")).toBeInTheDocument();
+  });
+});
+
 describe("EditAutomationModal", () => {
   it("pre-fills current values and PATCHes only the fields that changed", async () => {
     // Arrange — daily automation at 09:00 with a known prompt. The
