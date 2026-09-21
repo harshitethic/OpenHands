@@ -119,7 +119,9 @@ describe("DeviceVerify", () => {
       });
 
       expect(screen.getByText("DEVICE$ENTER_CODE_PROMPT")).toBeInTheDocument();
-      expect(screen.getByLabelText("DEVICE$CODE_INPUT_LABEL")).toBeInTheDocument();
+      const codeInput = screen.getByLabelText("DEVICE$CODE_INPUT_LABEL");
+      expect(codeInput).toHaveClass("border-border-input", "focus:ring-focus");
+      expect(codeInput).not.toHaveClass("border-input", "focus:ring-ring");
       expect(
         screen.getByRole("button", { name: "DEVICE$CONTINUE" }),
       ).toBeInTheDocument();
@@ -196,7 +198,12 @@ describe("DeviceVerify", () => {
       expect(screen.getByText("ABC-123")).toBeInTheDocument();
       expect(screen.getByText("DEVICE$SECURITY_NOTICE")).toBeInTheDocument();
       expect(screen.getByText("DEVICE$SECURITY_WARNING")).toBeInTheDocument();
-      expect(screen.getByText("DEVICE$CONFIRM_PROMPT")).toBeInTheDocument();
+      const confirmPrompt = screen.getByText("DEVICE$CONFIRM_PROMPT");
+      expect(confirmPrompt).toHaveClass("text-muted");
+      expect(confirmPrompt).not.toHaveClass("text-muted-foreground");
+      expect(
+        screen.getByText("DEVICE$AUTHORIZATION_REQUEST").closest(".bg-surface-raised"),
+      ).toBeInTheDocument();
     });
 
     it("should show cancel and authorize buttons", async () => {
