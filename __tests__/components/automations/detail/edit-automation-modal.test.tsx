@@ -193,7 +193,7 @@ beforeEach(() => {
 });
 
 describe("EditAutomationModal — viewport containment", () => {
-  it("keeps chrome fixed while the form body owns overflow", () => {
+  it("constrains the dialog and keeps footer actions sticky while the form scrolls", () => {
     renderModal(dailyAutomation);
 
     expect(screen.getByTestId("edit-automation-dialog")).toHaveClass(
@@ -208,6 +208,8 @@ describe("EditAutomationModal — viewport containment", () => {
       "overflow-y-auto",
     );
     expect(screen.getByTestId("edit-automation-footer")).toHaveClass(
+      "sticky",
+      "bottom-0",
       "shrink-0",
     );
     expect(screen.getByTestId("edit-automation-save")).toBeInTheDocument();
