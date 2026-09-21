@@ -119,7 +119,35 @@ export function FileDiffViewer({
     React.useState(false);
   const [viewMode, setViewMode] = React.useState<ViewMode>("diff");
   const diffEditorRef = React.useRef<editor_t.IStandaloneDiffEditor>(null);
+  const diffEditorModelsRef = React.useRef<editor_t.IDiffEditorModel | null>(
+    null,
+  );
   const singleEditorRef = React.useRef<editor_t.IStandaloneCodeEditor>(null);
+
+  const disposeRetainedDiffModels = React.useCallback(() => {
+    const editor = diffEditorRef.current;
+    if (editor) {
+      // @monaco-editor/react currently disposes the two text models before
+      // disposing/resetting the DiffEditorWidget. Monaco rejects that ordering
+      // with "TextModel got disposed before DiffEditorWidget model got reset".
+      // Detach first so either cleanup order (parent first or child first) is
+      // safe, then dispose the models that we asked the wrapper to retain.
+      editor.setModel(null);
+      diffEditorRef.current = null;
+    }
+
+    const models = diffEditorModelsRef.current;
+    if (models) {
+      if (!models.original.isDisposed()) models.original.dispose();
+      if (
+        models.modified !== models.original &&
+        !models.modified.isDisposed()
+      ) {
+        models.modified.dispose();
+      }
+      diffEditorModelsRef.current = null;
+    }
+  }, []);
 
   const isAdded = type === "A" || type === "U";
   const isDeleted = type === "D";
@@ -179,10 +207,35 @@ export function FileDiffViewer({
 
   const handleDiffEditorMount = (editor: editor_t.IStandaloneDiffEditor) => {
     diffEditorRef.current = editor;
+    diffEditorModelsRef.current = editor.getModel();
+    editor.onDidDispose(() => {
+      if (diffEditorRef.current === editor) {
+        diffEditorRef.current = null;
+      }
+    });
     updateEditorHeight();
     editor.getOriginalEditor().onDidContentSizeChange(updateEditorHeight);
     editor.getModifiedEditor().onDidContentSizeChange(updateEditorHeight);
   };
+
+  // When the diff child leaves the tree because the row collapses or switches
+  // to a single-file view, @monaco-editor/react disposes the widget but retains
+  // its models (see the keepCurrent* props below). Release those retained
+  // models after the child teardown. The layout cleanup handles the full
+  // FileDiffViewer unmount/tab-switch path and detaches the widget first when
+  // this component is torn down before its child.
+  React.useEffect(() => {
+    if (isCollapsed || viewMode !== "diff") {
+      disposeRetainedDiffModels();
+    }
+  }, [disposeRetainedDiffModels, isCollapsed, viewMode]);
+
+  React.useLayoutEffect(
+    () => () => {
+      disposeRetainedDiffModels();
+    },
+    [disposeRetainedDiffModels],
+  );
 
   const handleSingleEditorMount = (editor: editor_t.IStandaloneCodeEditor) => {
     singleEditorRef.current = editor;
@@ -241,6 +294,8 @@ export function FileDiffViewer({
           theme="custom-diff-theme"
           onMount={handleDiffEditorMount}
           beforeMount={beforeMount}
+          keepCurrentOriginalModel
+          keepCurrentModifiedModel
           options={{
             ...SHARED_EDITOR_OPTIONS,
             renderSideBySide: !isAdded && !isDeleted,
