@@ -25,14 +25,23 @@ vi.stubGlobal("window", windowStub);
 windowStub.scrollTo = vi.fn();
 
 // Node.js 25+ ships a built-in localStorage that requires --localstorage-file
-// and is not functional without it. Stub it with a plain in-memory
-// implementation so zustand's persist middleware works in tests.
+// and is not functional without it. Install a plain in-memory implementation
+// directly rather than through vi.stubGlobal(): test-local calls to
+// vi.unstubAllGlobals() must not remove setup-owned infrastructure for later
+// tests in the same worker.
+const originalLocalStorageDescriptor = Object.getOwnPropertyDescriptor(
+  globalThis,
+  "localStorage",
+);
+let installedMemoryLocalStorage = false;
+
 if (
   typeof localStorage === "undefined" ||
-  typeof localStorage.setItem !== "function"
+  typeof localStorage.setItem !== "function" ||
+  typeof localStorage.clear !== "function"
 ) {
   const store: Record<string, string> = {};
-  vi.stubGlobal("localStorage", {
+  const memoryLocalStorage: Storage = {
     getItem: (key: string) => store[key] ?? null,
     setItem: (key: string, value: string) => {
       store[key] = String(value);
@@ -47,7 +56,14 @@ if (
       return Object.keys(store).length;
     },
     key: (index: number) => Object.keys(store)[index] ?? null,
+  };
+
+  Object.defineProperty(globalThis, "localStorage", {
+    value: memoryLocalStorage,
+    configurable: true,
+    writable: true,
   });
+  installedMemoryLocalStorage = true;
 }
 
 if (typeof requestAnimationFrame === "undefined") {
@@ -219,4 +235,15 @@ afterAll(async () => {
   }
   server.close();
   vi.unstubAllGlobals();
+  if (installedMemoryLocalStorage) {
+    if (originalLocalStorageDescriptor) {
+      Object.defineProperty(
+        globalThis,
+        "localStorage",
+        originalLocalStorageDescriptor,
+      );
+    } else {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    }
+  }
 });
