@@ -30,7 +30,7 @@ export function PluginsToolbar({
   const { t } = useTranslation("openhands");
 
   return (
-    <div data-testid="plugins-toolbar" className="flex items-stretch gap-2">
+    <div\n      data-testid="plugins-toolbar"\n      className="flex flex-col items-stretch gap-2 sm:flex-row"\n    >
       <div
         className={cn(
           "relative flex flex-1 min-w-0 items-center",
@@ -70,7 +70,7 @@ export function PluginsToolbar({
 
       <div
         data-testid="plugins-status-filter"
-        className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--oh-border)] bg-base-secondary p-1"
+        className="flex w-full min-w-0 items-center gap-1 overflow-x-auto rounded-lg border border-[var(--oh-border)] bg-base-secondary p-1 sm:w-auto sm:shrink-0"
       >
         {STATUS_FILTERS.map((filter) => (
           <button
@@ -80,7 +80,7 @@ export function PluginsToolbar({
             aria-pressed={statusFilter === filter.value}
             onClick={() => onStatusFilterChange(filter.value)}
             className={cn(
-              "cursor-pointer rounded-md px-3 py-1 text-xs transition-colors",
+              "shrink-0 cursor-pointer rounded-md px-3 py-1 text-xs transition-colors",
               statusFilter === filter.value
                 ? "bg-surface-raised text-white"
                 : "text-tertiary-alt hover:text-white",
