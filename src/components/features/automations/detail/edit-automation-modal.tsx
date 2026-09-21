@@ -306,243 +306,227 @@ export function EditAutomationModal({
         }}
         role="presentation"
       />
-      <div
-        data-testid="edit-automation-dialog"
-        className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface)]"
-      >
-        <div className="relative shrink-0 px-6 pt-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-6 top-6 text-muted hover:text-foreground"
-            aria-label={t(I18nKey.AUTOMATIONS$CANCEL)}
-          >
-            <XMarkIcon className="size-5" />
-          </button>
+      <div\n        data-testid="edit-automation-dialog"\n        className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface)] p-6"\n      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 text-muted hover:text-foreground"
+          aria-label={t(I18nKey.AUTOMATIONS$CANCEL)}
+        >
+          <XMarkIcon className="size-5" />
+        </button>
 
-          <h2 className={modalTitleLgMediumClassName}>{editTitle}</h2>
-        </div>
+        <h2 className={modalTitleLgMediumClassName}>{editTitle}</h2>
 
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="flex min-h-0 flex-1 flex-col"
+          className="mt-4 flex flex-col gap-4"
           aria-label={editTitle}
         >
-          <div
-            data-testid="edit-automation-scroll-region"
-            className="mt-4 min-h-0 flex-1 overflow-y-auto px-6 pb-4"
-          >
-            <div className="flex flex-col gap-4">
-            {nameSpec.present && (
-              <SettingsInput
-                testId="edit-automation-name"
-                name="name"
-                type="text"
-                label={nameSpec.label}
-                value={form.name}
-                onChange={(value) => setForm((f) => ({ ...f, name: value }))}
-                error={nameError ?? undefined}
-                showRequiredTag={nameSpec.required}
-              />
-            )}
+          {nameSpec.present && (
+            <SettingsInput
+              testId="edit-automation-name"
+              name="name"
+              type="text"
+              label={nameSpec.label}
+              value={form.name}
+              onChange={(value) => setForm((f) => ({ ...f, name: value }))}
+              error={nameError ?? undefined}
+              showRequiredTag={nameSpec.required}
+            />
+          )}
 
-            {promptSpec.present && (
-              <label className="flex flex-col gap-2.5 w-full min-w-0">
-                <span className="text-sm">{promptSpec.label}</span>
-                <textarea
-                  data-testid="edit-automation-prompt"
-                  name="prompt"
-                  value={form.prompt}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, prompt: e.target.value }))
-                  }
-                  rows={4}
-                  className={cn(
-                    formControlMultilineFieldClassName,
-                    "placeholder:italic",
-                  )}
-                />
-                {promptSpec.help !== null && (
-                  <span className="text-xs text-muted">{promptSpec.help}</span>
+          {promptSpec.present && (
+            <label className="flex flex-col gap-2.5 w-full min-w-0">
+              <span className="text-sm">{promptSpec.label}</span>
+              <textarea
+                data-testid="edit-automation-prompt"
+                name="prompt"
+                value={form.prompt}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, prompt: e.target.value }))
+                }
+                rows={4}
+                className={cn(
+                  formControlMultilineFieldClassName,
+                  "placeholder:italic",
                 )}
-              </label>
-            )}
+              />
+              {promptSpec.help !== null && (
+                <span className="text-xs text-muted">{promptSpec.help}</span>
+              )}
+            </label>
+          )}
 
-            {capabilities?.features.includes("agentProfiles") && (
-              <AutomationAgentProfileSelector
-                value={form.agentProfileId}
-                onChange={(agentProfileId) =>
-                  setForm((current) => ({ ...current, agentProfileId }))
+          {capabilities?.features.includes("agentProfiles") && (
+            <AutomationAgentProfileSelector
+              value={form.agentProfileId}
+              onChange={(agentProfileId) =>
+                setForm((current) => ({ ...current, agentProfileId }))
+              }
+            />
+          )}
+          {!form.agentProfileId &&
+            modelSpec.present &&
+            (isLoadingProfiles || profiles.length > 0) && (
+              <SettingsDropdownInput
+                testId="edit-automation-model"
+                name="model"
+                label={modelSpec.label}
+                items={modelItems}
+                selectedKey={form.model || ACTIVE_PROFILE_KEY}
+                isLoading={isLoadingProfiles}
+                placeholder={t(I18nKey.COMMON$ACTIVE_PROFILE)}
+                onSelectionChange={(key) =>
+                  setForm((f) => ({
+                    ...f,
+                    model: key && key !== ACTIVE_PROFILE_KEY ? String(key) : "",
+                  }))
                 }
               />
             )}
-            {!form.agentProfileId &&
-              modelSpec.present &&
-              (isLoadingProfiles || profiles.length > 0) && (
+
+          {timeoutSpec.present && (
+            <div className="flex flex-col gap-2.5 w-full min-w-0">
+              <SettingsInput
+                testId="edit-automation-timeout"
+                name="timeout"
+                type="number"
+                label={timeoutSpec.label}
+                value={form.timeout}
+                onChange={(value) => setForm((f) => ({ ...f, timeout: value }))}
+                error={timeoutError ?? undefined}
+                showOptionalTag
+                min={timeoutSpec.min ?? 1}
+                max={timeoutMax}
+                step={1}
+                placeholder={String(AUTOMATION_TIMEOUT_DEFAULT_SECONDS)}
+              />
+              {timeoutSpec.help !== null && (
+                <span
+                  data-testid="edit-automation-timeout-hint"
+                  className="text-xs text-muted"
+                >
+                  {timeoutSpec.help}
+                </span>
+              )}
+            </div>
+          )}
+
+          {automation.trigger.type === "event" ? (
+            <div className="flex flex-col gap-3 rounded-lg bg-[var(--oh-surface-raised)] p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted">
+                  {t(I18nKey.AUTOMATIONS$DETAIL$TRIGGER)}
+                </span>
+                <span className="text-sm text-content">
+                  {t(I18nKey.AUTOMATIONS$DETAIL$TRIGGER_EVENT)}
+                </span>
+              </div>
+              {automation.trigger.source && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted">
+                    {t(I18nKey.AUTOMATIONS$DETAIL$EVENT_SOURCE)}
+                  </span>
+                  <span className="text-sm text-content">
+                    {automation.trigger.source}
+                  </span>
+                </div>
+              )}
+              {automation.trigger.on && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted">
+                    {t(I18nKey.AUTOMATIONS$DETAIL$EVENT_TYPE)}
+                  </span>
+                  <code className="text-xs font-mono text-content">
+                    {formatEventOn(automation.trigger.on)}
+                  </code>
+                </div>
+              )}
+              {automation.trigger.filter && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted">
+                    {t(I18nKey.AUTOMATIONS$DETAIL$EVENT_FILTER)}
+                  </span>
+                  <code className="text-xs font-mono text-content break-all">
+                    {automation.trigger.filter}
+                  </code>
+                </div>
+              )}
+            </div>
+          ) : scheduleSpec.present ? (
+            <>
+              <SettingsDropdownInput
+                testId="edit-automation-frequency"
+                name="frequency"
+                label={scheduleSpec.label}
+                items={frequencyItems}
+                selectedKey={form.frequency}
+                isDisabled={form.isCustomSchedule}
+                onSelectionChange={(key) => {
+                  if (!key || form.isCustomSchedule) return;
+                  setForm((f) => ({ ...f, frequency: key as FrequencyKey }));
+                }}
+              />
+
+              {form.frequency === "weekly" && !form.isCustomSchedule && (
                 <SettingsDropdownInput
-                  testId="edit-automation-model"
-                  name="model"
-                  label={modelSpec.label}
-                  items={modelItems}
-                  selectedKey={form.model || ACTIVE_PROFILE_KEY}
-                  isLoading={isLoadingProfiles}
-                  placeholder={t(I18nKey.COMMON$ACTIVE_PROFILE)}
-                  onSelectionChange={(key) =>
-                    setForm((f) => ({
-                      ...f,
-                      model: key && key !== ACTIVE_PROFILE_KEY ? String(key) : "",
-                    }))
-                  }
+                  testId="edit-automation-weekday"
+                  name="weekday"
+                  label={t(I18nKey.AUTOMATIONS$WEEKDAY)}
+                  items={weekdayItems}
+                  selectedKey={String(form.weekday)}
+                  onSelectionChange={(key) => {
+                    if (key === null) return;
+                    setForm((f) => ({ ...f, weekday: Number(key) }));
+                  }}
                 />
               )}
 
-            {timeoutSpec.present && (
-              <div className="flex flex-col gap-2.5 w-full min-w-0">
-                <SettingsInput
-                  testId="edit-automation-timeout"
-                  name="timeout"
-                  type="number"
-                  label={timeoutSpec.label}
-                  value={form.timeout}
-                  onChange={(value) => setForm((f) => ({ ...f, timeout: value }))}
-                  error={timeoutError ?? undefined}
-                  showOptionalTag
-                  min={timeoutSpec.min ?? 1}
-                  max={timeoutMax}
-                  step={1}
-                  placeholder={String(AUTOMATION_TIMEOUT_DEFAULT_SECONDS)}
-                />
-                {timeoutSpec.help !== null && (
-                  <span
-                    data-testid="edit-automation-timeout-hint"
-                    className="text-xs text-muted"
-                  >
-                    {timeoutSpec.help}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {automation.trigger.type === "event" ? (
-              <div className="flex flex-col gap-3 rounded-lg bg-[var(--oh-surface-raised)] p-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-muted">
-                    {t(I18nKey.AUTOMATIONS$DETAIL$TRIGGER)}
-                  </span>
-                  <span className="text-sm text-content">
-                    {t(I18nKey.AUTOMATIONS$DETAIL$TRIGGER_EVENT)}
-                  </span>
-                </div>
-                {automation.trigger.source && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted">
-                      {t(I18nKey.AUTOMATIONS$DETAIL$EVENT_SOURCE)}
-                    </span>
-                    <span className="text-sm text-content">
-                      {automation.trigger.source}
-                    </span>
-                  </div>
-                )}
-                {automation.trigger.on && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted">
-                      {t(I18nKey.AUTOMATIONS$DETAIL$EVENT_TYPE)}
-                    </span>
-                    <code className="text-xs font-mono text-content">
-                      {formatEventOn(automation.trigger.on)}
-                    </code>
-                  </div>
-                )}
-                {automation.trigger.filter && (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-muted">
-                      {t(I18nKey.AUTOMATIONS$DETAIL$EVENT_FILTER)}
-                    </span>
-                    <code className="text-xs font-mono text-content break-all">
-                      {automation.trigger.filter}
-                    </code>
-                  </div>
-                )}
-              </div>
-            ) : scheduleSpec.present ? (
-              <>
-                <SettingsDropdownInput
-                  testId="edit-automation-frequency"
-                  name="frequency"
-                  label={scheduleSpec.label}
-                  items={frequencyItems}
-                  selectedKey={form.frequency}
-                  isDisabled={form.isCustomSchedule}
-                  onSelectionChange={(key) => {
-                    if (!key || form.isCustomSchedule) return;
-                    setForm((f) => ({ ...f, frequency: key as FrequencyKey }));
-                  }}
-                />
-
-                {form.frequency === "weekly" && !form.isCustomSchedule && (
-                  <SettingsDropdownInput
-                    testId="edit-automation-weekday"
-                    name="weekday"
-                    label={t(I18nKey.AUTOMATIONS$WEEKDAY)}
-                    items={weekdayItems}
-                    selectedKey={String(form.weekday)}
-                    onSelectionChange={(key) => {
-                      if (key === null) return;
-                      setForm((f) => ({ ...f, weekday: Number(key) }));
-                    }}
-                  />
-                )}
-
-                <label className="flex flex-col gap-2.5 w-full min-w-0">
-                  <span className="text-sm">
-                    {t(I18nKey.AUTOMATIONS$TIME_OF_DAY)}
-                  </span>
-                  <input
-                    data-testid="edit-automation-time"
-                    name="timeOfDay"
-                    type="time"
-                    value={form.timeOfDay}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, timeOfDay: e.target.value }))
-                    }
-                    disabled={form.isCustomSchedule}
-                    className={cn(
-                      formControlSettingsFieldClassName,
-                      "disabled:bg-[var(--oh-surface-raised)]",
-                    )}
-                  />
-                  {automation.timezone && (
-                    <span className="text-xs text-muted">
-                      {t(I18nKey.AUTOMATIONS$TIMEZONE)}: {automation.timezone}
-                    </span>
+              <label className="flex flex-col gap-2.5 w-full min-w-0">
+                <span className="text-sm">
+                  {t(I18nKey.AUTOMATIONS$TIME_OF_DAY)}
+                </span>
+                <input
+                  data-testid="edit-automation-time"
+                  name="timeOfDay"
+                  type="time"
+                  value={form.timeOfDay}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, timeOfDay: e.target.value }))
+                  }
+                  disabled={form.isCustomSchedule}
+                  className={cn(
+                    formControlSettingsFieldClassName,
+                    "disabled:bg-[var(--oh-surface-raised)]",
                   )}
-                </label>
-
-                {form.isCustomSchedule && (
-                  <SettingsInput
-                    testId="edit-automation-cron"
-                    name="cron"
-                    type="text"
-                    label={t(I18nKey.AUTOMATIONS$CRON_EXPRESSION)}
-                    value={form.rawSchedule}
-                    onChange={(value) =>
-                      setForm((f) => ({ ...f, rawSchedule: value }))
-                    }
-                    error={scheduleError ?? undefined}
-                    placeholder={CRON_EXPRESSION_EXAMPLE}
-                  />
+                />
+                {automation.timezone && (
+                  <span className="text-xs text-muted">
+                    {t(I18nKey.AUTOMATIONS$TIMEZONE)}: {automation.timezone}
+                  </span>
                 )}
-              </>
-            ) : null}
+              </label>
 
-            </div>
-          </div>
+              {form.isCustomSchedule && (
+                <SettingsInput
+                  testId="edit-automation-cron"
+                  name="cron"
+                  type="text"
+                  label={t(I18nKey.AUTOMATIONS$CRON_EXPRESSION)}
+                  value={form.rawSchedule}
+                  onChange={(value) =>
+                    setForm((f) => ({ ...f, rawSchedule: value }))
+                  }
+                  error={scheduleError ?? undefined}
+                  placeholder={CRON_EXPRESSION_EXAMPLE}
+                />
+              )}
+            </>
+          ) : null}
 
-          <div
-            data-testid="edit-automation-footer"
-            className="flex shrink-0 justify-end gap-3 border-t border-[var(--oh-border)] px-6 py-4"
-          >
+          <div\n            data-testid="edit-automation-footer"\n            className="sticky bottom-0 -mx-6 -mb-6 mt-2 flex shrink-0 justify-end gap-3 border-t border-[var(--oh-border)] bg-[var(--oh-surface)] px-6 py-4"\n          >
             <BrandButton
               testId="edit-automation-cancel"
               type="button"
