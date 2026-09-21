@@ -318,3 +318,28 @@ describe("SkillsPluginsScreen", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+
+describe("SkillsPluginsScreen — responsive toolbar", () => {
+  it("stacks search above a self-scrolling filter row on narrow screens", async () => {
+    renderPluginsScreen();
+
+    const toolbar = await screen.findByTestId("plugins-toolbar");
+    const filters = screen.getByTestId("plugins-status-filter");
+
+    expect(toolbar).toHaveClass("flex-col", "sm:flex-row");
+    expect(filters).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "overflow-x-auto",
+      "sm:w-auto",
+      "sm:shrink-0",
+    );
+
+    for (const value of ["all", "installed", "available", "local"]) {
+      expect(screen.getByTestId(`plugins-filter-${value}`)).toHaveClass(
+        "shrink-0",
+      );
+    }
+  });
+});
