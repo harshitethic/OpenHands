@@ -366,8 +366,11 @@ export default function AutomationsList() {
   return renderShell(
     <>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+      <div
+        data-testid="automations-header"
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-semibold text-content">
             {interfaceCopy.listTitle}
           </h1>
@@ -375,7 +378,10 @@ export default function AutomationsList() {
             {interfaceCopy.listSubtitle}
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-2">
+        <div
+          data-testid="automations-header-actions"
+          className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0 sm:justify-end"
+        >
           {isLocalBackend && (
             <BrandButton
               type="button"
