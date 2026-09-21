@@ -476,3 +476,29 @@ describe("AutomationsList — list freshness on remount", () => {
     await screen.findByText(newAutomation.name);
   });
 });
+
+
+describe("AutomationsList — responsive dashboard header", () => {
+  it("stacks header actions below readable copy on narrow screens", async () => {
+    renderList();
+    await screen.findByText(automation.name);
+
+    const header = screen.getByTestId("automations-header");
+    const actions = screen.getByTestId("automations-header-actions");
+
+    expect(header).toHaveClass(
+      "flex-col",
+      "sm:flex-row",
+      "sm:items-start",
+      "sm:justify-between",
+    );
+    expect(actions).toHaveClass(
+      "w-full",
+      "flex-wrap",
+      "sm:w-auto",
+      "sm:shrink-0",
+      "sm:justify-end",
+    );
+    expect(screen.getByTestId("automations-git-sync")).toBeInTheDocument();
+  });
+});
