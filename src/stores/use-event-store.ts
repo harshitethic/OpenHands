@@ -128,11 +128,33 @@ const appendEvent = (state: EventState, event: OHEvent): EventState => {
   };
 };
 
-const sortEventState = (state: EventState): EventState => ({
-  ...state,
-  events: [...state.events].sort(compareEventsByTimestamp),
-  uiEvents: [...state.uiEvents].sort(compareEventsByTimestamp),
-});
+const sortEventsStable = (events: OHEvent[]): OHEvent[] =>
+  events
+    .map((event, index) => ({ event, index }))
+    .sort(
+      (a, b) =>
+        compareEventsByTimestamp(a.event, b.event) || a.index - b.index,
+    )
+    .map(({ event }) => event);
+
+const projectUiEvents = (events: OHEvent[]): OHEvent[] =>
+  events.reduce<OHEvent[]>(
+    (uiEvents, event) => handleEventForUI(event, uiEvents),
+    [],
+  );
+
+const sortEventState = (state: EventState): EventState => {
+  const events = sortEventsStable(state.events);
+  return {
+    ...state,
+    events,
+    // UI replacement rules are order-dependent (action -> observation, ACP
+    // started -> terminal). Replaying the canonical sorted history is required
+    // when pagination inserts older events; sorting an already-projected list
+    // cannot repair a projection built in arrival order.
+    uiEvents: projectUiEvents(events),
+  };
+};
 
 const applyAddEvent = (state: EventState, event: OHEvent): EventState => {
   const next = appendEvent(state, event);
