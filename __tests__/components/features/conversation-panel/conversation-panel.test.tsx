@@ -12,7 +12,6 @@ import i18n from "i18next";
 import { NavigationProvider } from "#/context/navigation-context";
 import {
   afterEach,
-  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -46,6 +45,14 @@ vi.mock("#/hooks/mutation/use-unified-stop-conversation", () => ({
   useUnifiedPauseConversation: () => ({
     mutate: mockStopConversationMutate,
   }),
+}));
+
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-router")>()),
+  Link: ({ children }: React.PropsWithChildren) => children,
+  useNavigate: vi.fn(() => vi.fn()),
+  useLocation: vi.fn(() => ({ pathname: "/conversation" })),
+  useParams: vi.fn(() => ({ conversationId: "2" })),
 }));
 
 // Helper to create complete AppConversation mock data
@@ -117,16 +124,6 @@ describe("ConversationPanel", () => {
     await user.click(screen.getByTestId("conversation-layouts-toggle"));
     await user.click(screen.getByTestId("advanced-options-row"));
   };
-
-  beforeAll(() => {
-    vi.mock("react-router", async (importOriginal) => ({
-      ...(await importOriginal<typeof import("react-router")>()),
-      Link: ({ children }: React.PropsWithChildren) => children,
-      useNavigate: vi.fn(() => vi.fn()),
-      useLocation: vi.fn(() => ({ pathname: "/conversation" })),
-      useParams: vi.fn(() => ({ conversationId: "2" })),
-    }));
-  });
 
   const mockConversations: AppConversation[] = [
     createMockConversation({ id: "1", title: "Conversation 1" }),
