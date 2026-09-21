@@ -212,7 +212,7 @@ export default function DeviceVerify() {
                 id="user_code"
                 name="user_code"
                 required
-                className="w-full px-3 py-2 border border-border-input rounded-md focus:outline-none focus:ring-2 focus:ring-focus"
+                className="w-full px-3 py-2 border border-border-border-input rounded-md focus:outline-none focus:ring-2 focus:ring-focus"
                 placeholder={t(I18nKey.DEVICE$CODE_PLACEHOLDER)}
               />
             </div>
