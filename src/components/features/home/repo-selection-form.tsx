@@ -14,6 +14,7 @@ import { GitProviderDropdown } from "./git-provider-dropdown";
 import { GitBranchDropdown } from "./git-branch-dropdown";
 import { GitRepoDropdown } from "./git-repo-dropdown";
 import { useHomeStore } from "#/stores/home-store";
+import { useActiveBackend } from "#/contexts/active-backend-context";
 
 interface RepositorySelectionFormProps {
   /**
@@ -44,6 +45,8 @@ export function RepositorySelectionForm({
   onConfirm,
 }: RepositorySelectionFormProps) {
   const { navigate } = useNavigation();
+  const { backend, orgId } = useActiveBackend();
+  const recentRepositoryScopeKey = `${backend.id}:${orgId ?? ""}`;
 
   const [selectedRepository, setSelectedRepository] =
     React.useState<GitRepository | null>(null);
@@ -145,6 +148,7 @@ export function RepositorySelectionForm({
     return (
       <GitRepoDropdown
         provider={selectedProvider || providers[0]}
+        recentScopeKey={recentRepositoryScopeKey}
         value={selectedRepository?.id || null}
         repositoryName={selectedRepository?.full_name || null}
         // eslint-disable-next-line i18next/no-literal-string -- example value, not translatable
@@ -214,7 +218,7 @@ export function RepositorySelectionForm({
 
           // Persist the repository to recent repositories on every confirm so
           // the home launcher and the inline path stay in sync.
-          addRecentRepository(selectedRepository);
+          addRecentRepository(selectedRepository, recentRepositoryScopeKey);
 
           if (onConfirm) {
             onConfirm({
