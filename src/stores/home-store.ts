@@ -33,7 +33,9 @@ function prependRecentRepository(
   repositories: GitRepository[],
   repository: GitRepository,
 ): GitRepository[] {
-  const filteredRepos = repositories.filter((repo) => repo.id !== repository.id);
+  const filteredRepos = repositories.filter(
+    (repo) => repo.id !== repository.id,
+  );
   return [repository, ...filteredRepos].slice(0, 3);
 }
 
