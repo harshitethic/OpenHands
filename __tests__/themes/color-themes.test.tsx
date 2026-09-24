@@ -28,6 +28,30 @@ describe("color themes", () => {
     ).toBe("OpenHands-Neo");
   });
 
+  it("exposes Light+ and Solarized Light in the settings theme picker", () => {
+    const themes = new Map(
+      AVAILABLE_COLOR_THEMES.map((theme) => [theme.key, theme.label]),
+    );
+
+    expect(themes.get("light-plus")).toBe("Light+");
+    expect(themes.get("solarized-light")).toBe("Solarized Light");
+  });
+
+  it.each([
+    ["light-plus", "#FFFFFF"],
+    ["solarized-light", "#FDF6E3"],
+  ] as const)("applies %s as a light background theme", (key, background) => {
+    applyColorTheme(key);
+
+    const styleEl = document.getElementById("oh-color-theme-override");
+    expect(styleEl?.textContent).toContain(
+      `--cool-grey-950: ${background};`,
+    );
+    expect(styleEl?.textContent).toContain("--heroui-background:");
+
+    styleEl?.remove();
+  });
+
   it("injects white primary tokens when applying OpenHands-Neo", () => {
     document.body.setAttribute("data-agent-server-ui", "");
 

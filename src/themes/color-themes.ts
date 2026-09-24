@@ -1,7 +1,9 @@
 export type ColorThemeKey =
   | "openhands-deepsea"
   | "openhands-neutral"
-  | "openhands-neo";
+  | "openhands-neo"
+  | "light-plus"
+  | "solarized-light";
 
 export interface ColorThemeDefinition {
   label: string;
@@ -105,6 +107,110 @@ const NEO_WHITE_BUTTON_TOKENS: Record<
   "--oh-warning": "#ffffff",
 };
 
+const LIGHT_PLUS_SCALE = {
+  "--cool-grey-50": "#1E1E1E",
+  "--cool-grey-100": "#2D2D2D",
+  "--cool-grey-200": "#3C3C3C",
+  "--cool-grey-300": "#5A5A5A",
+  "--cool-grey-400": "#6E6E6E",
+  "--cool-grey-500": "#858585",
+  "--cool-grey-600": "#A0A0A0",
+  "--cool-grey-700": "#C8C8C8",
+  "--cool-grey-800": "#E5E5E5",
+  "--cool-grey-900": "#F0F0F0",
+  "--cool-grey-925": "#F7F7F7",
+  "--cool-grey-950": "#FFFFFF",
+  "--cool-grey-975": "#FFFFFF",
+};
+
+const LIGHT_PLUS_HEROUI = {
+  "--heroui-background": "0 0% 100%",
+  "--heroui-background-foreground": "0 0% 12%",
+  "--heroui-foreground-50": "0 0% 100%",
+  "--heroui-foreground-100": "0 0% 97%",
+  "--heroui-foreground-200": "0 0% 94%",
+  "--heroui-foreground-300": "0 0% 90%",
+  "--heroui-foreground-400": "0 0% 78%",
+  "--heroui-foreground-500": "0 0% 63%",
+  "--heroui-foreground-600": "0 0% 52%",
+  "--heroui-foreground-700": "0 0% 43%",
+  "--heroui-foreground-800": "0 0% 24%",
+  "--heroui-foreground-900": "0 0% 18%",
+  "--heroui-foreground": "0 0% 12%",
+  "--heroui-content1": "0 0% 100%",
+  "--heroui-content1-foreground": "0 0% 12%",
+  "--heroui-content2": "0 0% 97%",
+  "--heroui-content2-foreground": "0 0% 18%",
+  "--heroui-content3": "0 0% 94%",
+  "--heroui-content3-foreground": "0 0% 24%",
+  "--heroui-content4": "0 0% 90%",
+  "--heroui-content4-foreground": "0 0% 30%",
+  "--heroui-default-50": "0 0% 100%",
+  "--heroui-default-100": "0 0% 97%",
+  "--heroui-default-200": "0 0% 94%",
+  "--heroui-default-300": "0 0% 90%",
+  "--heroui-default-400": "0 0% 78%",
+  "--heroui-default-500": "0 0% 63%",
+  "--heroui-default-600": "0 0% 52%",
+  "--heroui-default-700": "0 0% 43%",
+  "--heroui-default-800": "0 0% 24%",
+  "--heroui-default-900": "0 0% 18%",
+  "--heroui-default-foreground": "0 0% 12%",
+  "--heroui-default": "0 0% 94%",
+};
+
+const SOLARIZED_LIGHT_SCALE = {
+  "--cool-grey-50": "#002B36",
+  "--cool-grey-100": "#073642",
+  "--cool-grey-200": "#586E75",
+  "--cool-grey-300": "#657B83",
+  "--cool-grey-400": "#839496",
+  "--cool-grey-500": "#93A1A1",
+  "--cool-grey-600": "#B9B6A5",
+  "--cool-grey-700": "#D6D2BD",
+  "--cool-grey-800": "#E5E1CA",
+  "--cool-grey-900": "#EEE8D5",
+  "--cool-grey-925": "#F5EEDB",
+  "--cool-grey-950": "#FDF6E3",
+  "--cool-grey-975": "#FFFDF5",
+};
+
+const SOLARIZED_LIGHT_HEROUI = {
+  "--heroui-background": "44 87% 94%",
+  "--heroui-background-foreground": "192 81% 14%",
+  "--heroui-foreground-50": "44 100% 98%",
+  "--heroui-foreground-100": "44 87% 94%",
+  "--heroui-foreground-200": "46 50% 88%",
+  "--heroui-foreground-300": "45 34% 79%",
+  "--heroui-foreground-400": "186 8% 55%",
+  "--heroui-foreground-500": "186 13% 47%",
+  "--heroui-foreground-600": "194 14% 40%",
+  "--heroui-foreground-700": "192 81% 14%",
+  "--heroui-foreground-800": "192 100% 11%",
+  "--heroui-foreground-900": "192 100% 9%",
+  "--heroui-foreground": "192 81% 14%",
+  "--heroui-content1": "44 87% 94%",
+  "--heroui-content1-foreground": "192 81% 14%",
+  "--heroui-content2": "46 50% 88%",
+  "--heroui-content2-foreground": "192 81% 14%",
+  "--heroui-content3": "45 34% 79%",
+  "--heroui-content3-foreground": "192 100% 11%",
+  "--heroui-content4": "186 8% 55%",
+  "--heroui-content4-foreground": "44 100% 98%",
+  "--heroui-default-50": "44 100% 98%",
+  "--heroui-default-100": "44 87% 94%",
+  "--heroui-default-200": "46 50% 88%",
+  "--heroui-default-300": "45 34% 79%",
+  "--heroui-default-400": "186 8% 55%",
+  "--heroui-default-500": "186 13% 47%",
+  "--heroui-default-600": "194 14% 40%",
+  "--heroui-default-700": "192 81% 14%",
+  "--heroui-default-800": "192 100% 11%",
+  "--heroui-default-900": "192 100% 9%",
+  "--heroui-default-foreground": "192 81% 14%",
+  "--heroui-default": "46 50% 88%",
+};
+
 export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   "openhands-deepsea": {
     label: "OpenHands-DeepSea",
@@ -179,6 +285,18 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
     scale: NEUTRAL_SCALE,
     heroui: NEUTRAL_HEROUI,
     tokens: NEO_WHITE_BUTTON_TOKENS,
+  },
+
+  "light-plus": {
+    label: "Light+",
+    scale: LIGHT_PLUS_SCALE,
+    heroui: LIGHT_PLUS_HEROUI,
+  },
+
+  "solarized-light": {
+    label: "Solarized Light",
+    scale: SOLARIZED_LIGHT_SCALE,
+    heroui: SOLARIZED_LIGHT_HEROUI,
   },
 };
 
