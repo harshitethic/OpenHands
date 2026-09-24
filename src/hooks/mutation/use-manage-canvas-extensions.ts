@@ -63,3 +63,40 @@ export function useUninstallCanvasExtension() {
     },
   });
 }
+/** Reinstall an App from its original source and preserve its enabled state. */
+export function useRefreshCanvasExtension() {
+  const invalidate = useInvalidateCanvasExtensions();
+  const { t } = useTranslation("openhands");
+
+  return useMutation({
+    meta: { disableToast: true },
+    mutationFn: async (
+      extension: import("#/types/canvas-extension").InstalledCanvasExtensionInfo,
+    ) => {
+      const refreshed = await CanvasExtensionsService.install({
+        source: extension.source,
+        ref: extension.requested_ref ?? null,
+        repo_path: extension.repo_path ?? null,
+        force: true,
+      });
+
+      if (refreshed.enabled !== extension.enabled) {
+        await CanvasExtensionsService.setEnabled(
+          extension.name,
+          extension.enabled,
+        );
+      }
+      return { ...refreshed, enabled: extension.enabled };
+    },
+    onSuccess: () => {
+      void invalidate();
+      displaySuccessToast(t(I18nKey.SETTINGS$PLUGINS_REFRESH_SUCCESS));
+    },
+    onError: (error) => {
+      const message = getApiErrorBody(error)
+        ? getApiErrorMessage(error, t(I18nKey.ERROR$GENERIC))
+        : retrieveAxiosErrorMessage(error) || t(I18nKey.ERROR$GENERIC);
+      displayErrorToast(message);
+    },
+  });
+}
