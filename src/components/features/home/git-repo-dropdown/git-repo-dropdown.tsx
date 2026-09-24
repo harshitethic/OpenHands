@@ -28,6 +28,7 @@ import { Typography } from "#/ui/typography";
 
 export interface GitRepoDropdownProps {
   provider: Provider;
+  recentScopeKey?: string;
   value?: string | null;
   repositoryName?: string | null;
   placeholder?: string;
@@ -38,6 +39,7 @@ export interface GitRepoDropdownProps {
 
 export function GitRepoDropdown({
   provider,
+  recentScopeKey,
   value,
   repositoryName,
   placeholder,
@@ -46,7 +48,11 @@ export function GitRepoDropdown({
   onChange,
 }: GitRepoDropdownProps) {
   const { t } = useTranslation("openhands");
-  const { recentRepositories: storedRecentRepositories } = useHomeStore();
+  const storedRecentRepositories = useHomeStore((state) =>
+    recentScopeKey
+      ? (state.recentRepositoriesByScope[recentScopeKey] ?? [])
+      : state.recentRepositories,
+  );
   const [inputValue, setInputValue] = useState("");
   const [localSelectedItem, setLocalSelectedItem] =
     useState<GitRepository | null>(null);
