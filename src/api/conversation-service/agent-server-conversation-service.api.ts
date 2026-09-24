@@ -435,7 +435,6 @@ class AgentServerConversationService {
         body: { ...message, run: true },
         authMode: "session-api-key",
         sessionApiKey,
-        timeoutSeconds: CONDENSE_CONVERSATION_TIMEOUT_MS / 1000,
       });
 
       return message;
@@ -919,6 +918,7 @@ class AgentServerConversationService {
         path: `/api/conversations/${conversationId}/condense`,
         authMode: "session-api-key",
         sessionApiKey,
+        timeoutSeconds: CONDENSE_CONVERSATION_TIMEOUT_MS / 1000,
       });
       return;
     }
