@@ -43,9 +43,10 @@ import { HomeGitControlBarPreview } from "./home-git-control-bar-preview";
 
 export function HomeChatLauncher() {
   const { t } = useTranslation("openhands");
-  const { backend } = useActiveBackend();
+  const { backend, orgId } = useActiveBackend();
   const { navigate } = useNavigation();
   const isLocal = backend.kind === "local";
+  const launchScopeKey = `${backend.id}:${orgId ?? ""}`;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pendingWorkspace, setPendingWorkspace] =
@@ -54,6 +55,9 @@ export function HomeChatLauncher() {
     useState<GitRepository | null>(null);
   const [pendingBranch, setPendingBranch] = useState<Branch | null>(null);
   const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
+  const [selectionScopeKey, setSelectionScopeKey] = useState<string | null>(
+    null,
+  );
   const [workspaceMode, setWorkspaceModeState] = useState<WorkspaceMode>(() =>
     readStoredLocalWorkspaceMode(),
   );
@@ -82,9 +86,12 @@ export function HomeChatLauncher() {
     if (isLocal) writeStoredLocalWorkspaceMode(mode);
   };
 
-  const hasSelection = isLocal
-    ? !!pendingWorkspace
-    : !!pendingRepository && !!pendingBranch;
+  const hasCurrentScopeSelection = selectionScopeKey === launchScopeKey;
+  const hasSelection =
+    hasCurrentScopeSelection &&
+    (isLocal
+      ? !!pendingWorkspace
+      : !!pendingRepository && !!pendingBranch);
 
   const handleSubmit = (message: string) => {
     const trimmed = message.trim();
@@ -111,13 +118,18 @@ export function HomeChatLauncher() {
       query: hasAttachments ? undefined : trimmed || undefined,
       entryPoint: "home_chat_launcher",
     };
-    if (isLocal && pendingWorkspace) {
+    if (hasCurrentScopeSelection && isLocal && pendingWorkspace) {
       variables = {
         ...variables,
         workingDir: pendingWorkspace.path,
         workspaceMode,
       };
-    } else if (!isLocal && pendingRepository && pendingBranch) {
+    } else if (
+      hasCurrentScopeSelection &&
+      !isLocal &&
+      pendingRepository &&
+      pendingBranch
+    ) {
       variables = {
         ...variables,
         repository: {
@@ -284,6 +296,7 @@ export function HomeChatLauncher() {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           onConfirm={(workspace) => {
+            setSelectionScopeKey(launchScopeKey);
             setPendingWorkspace(workspace);
             setPendingRepository(null);
             setPendingBranch(null);
@@ -295,6 +308,7 @@ export function HomeChatLauncher() {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           onConfirm={({ repository, branch, provider }) => {
+            setSelectionScopeKey(launchScopeKey);
             setPendingRepository(repository);
             setPendingBranch(branch);
             setPendingProvider(provider ?? repository.git_provider);

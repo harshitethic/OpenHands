@@ -296,6 +296,17 @@ const localBackend = {
   orgId: null,
 };
 
+const localBackendB = {
+  backend: {
+    id: "local-id-b",
+    name: "Local B",
+    host: "http://localhost:8002",
+    apiKey: "test",
+    kind: "local" as const,
+  },
+  orgId: null,
+};
+
 const cloudBackend = {
   backend: {
     id: "cloud-id",
@@ -415,6 +426,37 @@ describe("HomeChatLauncher", () => {
     );
   });
 
+  it("does not submit a workspace selected on another local backend", async () => {
+    const createSpy = vi
+      .spyOn(AgentServerConversationService, "createConversation")
+      .mockResolvedValue(makeConversationResponse());
+
+    const { rerender } = renderLauncher();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByTestId("open-workspace-button"));
+    await user.click(
+      await screen.findByTestId("stub-workspace-dialog-confirm"),
+    );
+    expect(
+      screen.getByTestId("stub-git-control-bar-preview"),
+    ).toBeInTheDocument();
+
+    mockUseActiveBackend.mockReturnValue(localBackendB);
+    rerender(<HomeChatLauncher />);
+
+    expect(screen.queryByTestId("stub-git-control-bar-preview")).toBeNull();
+    expect(screen.getByTestId("open-workspace-button")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("stub-chat-submit"));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalledTimes(1));
+    expect(createSpy).toHaveBeenCalledWith({
+      initialUserMsg: "hello world",
+      metadata: null,
+    });
+  });
+
   it("passes the picked workspace path with new-worktree mode when selected", async () => {
     const createSpy = vi
       .spyOn(AgentServerConversationService, "createConversation")
@@ -531,6 +573,42 @@ describe("HomeChatLauncher", () => {
     await waitFor(() =>
       expect(mockNavigate).toHaveBeenCalledWith("/conversations/conv-repo"),
     );
+  });
+
+  it("does not submit a repository selected for another cloud organization", async () => {
+    mockUseActiveBackend.mockReturnValue({
+      ...cloudBackend,
+      orgId: "org-a",
+    });
+    const createSpy = vi
+      .spyOn(AgentServerConversationService, "createConversation")
+      .mockResolvedValue(makeConversationResponse());
+
+    const { rerender } = renderLauncher();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByTestId("open-repository-button"));
+    await user.click(await screen.findByTestId("stub-repo-dialog-confirm"));
+    expect(
+      screen.getByTestId("stub-git-control-bar-preview"),
+    ).toBeInTheDocument();
+
+    mockUseActiveBackend.mockReturnValue({
+      ...cloudBackend,
+      orgId: "org-b",
+    });
+    rerender(<HomeChatLauncher />);
+
+    expect(screen.queryByTestId("stub-git-control-bar-preview")).toBeNull();
+    expect(screen.getByTestId("open-repository-button")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("stub-chat-submit"));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalledTimes(1));
+    expect(createSpy).toHaveBeenCalledWith({
+      initialUserMsg: "hello world",
+      metadata: null,
+    });
   });
 
   it("does not pass query to createConversation when attachments are present", async () => {
