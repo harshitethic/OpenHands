@@ -214,6 +214,25 @@ describe("AutomationsList — manifest-declared dashboard", () => {
     });
   });
 
+  it("stacks dashboard header actions on narrow screens without changing desktop layout", async () => {
+    await renderDashboardWithSettledInsights();
+
+    const heading = screen.getByRole("heading", { name: "Widget automations" });
+    const titleColumn = heading.parentElement;
+    const header = titleColumn?.parentElement;
+    const actions = screen.getByTestId("automations-git-sync").parentElement;
+
+    expect(header).toHaveClass("flex-col", "sm:flex-row");
+    expect(titleColumn).toHaveClass("min-w-0", "sm:flex-1");
+    expect(actions).toHaveClass(
+      "w-full",
+      "flex-wrap",
+      "sm:w-auto",
+      "sm:shrink-0",
+      "sm:justify-end",
+    );
+  });
+
   it("orders the list by the manifest's declared sort default", async () => {
     // Arrange & Act — the widget manifest defaults to the name sort, while
     // the broken automation has the newer run.
