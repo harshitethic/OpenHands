@@ -3,7 +3,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import CanvasExtensionsService from "#/api/canvas-extensions-service";
-import { useInstallCanvasExtension } from "#/hooks/mutation/use-manage-canvas-extensions";
+import {
+  useInstallCanvasExtension,
+  useRefreshCanvasExtension,
+} from "#/hooks/mutation/use-manage-canvas-extensions";
 import { CORS_OR_NETWORK_ERROR_MESSAGE } from "#/utils/user-facing-error";
 
 const displayErrorToast = vi.fn();
@@ -75,5 +78,91 @@ describe("useInstallCanvasExtension", () => {
     expect(displayErrorToast).toHaveBeenCalledWith(
       CORS_OR_NETWORK_ERROR_MESSAGE,
     );
+  });
+});
+
+
+describe("useRefreshCanvasExtension", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("force-reinstalls from the original source and preserves enabled state", async () => {
+    vi.spyOn(CanvasExtensionsService, "install").mockResolvedValue({
+      name: "demo",
+      version: "0.2.0",
+      description: "updated",
+      enabled: false,
+      source: "github:example/apps",
+      requested_ref: "main",
+      resolved_ref: "new-sha",
+      repo_path: "apps/demo",
+      installed_at: "2026-09-24T00:00:00Z",
+      install_path: "/tmp/demo",
+    });
+    const setEnabled = vi
+      .spyOn(CanvasExtensionsService, "setEnabled")
+      .mockResolvedValue({ name: "demo", enabled: true });
+
+    const { result } = renderHook(() => useRefreshCanvasExtension(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({
+      name: "demo",
+      version: "0.1.0",
+      description: "old",
+      enabled: true,
+      source: "github:example/apps",
+      requested_ref: "main",
+      resolved_ref: "old-sha",
+      repo_path: "apps/demo",
+      installed_at: "2026-09-23T00:00:00Z",
+      install_path: "/tmp/demo",
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(CanvasExtensionsService.install).toHaveBeenCalledWith({
+      source: "github:example/apps",
+      ref: "main",
+      repo_path: "apps/demo",
+      force: true,
+    });
+    expect(setEnabled).toHaveBeenCalledWith("demo", true);
+  });
+
+  it("does not toggle a disabled App after refresh", async () => {
+    vi.spyOn(CanvasExtensionsService, "install").mockResolvedValue({
+      name: "demo",
+      version: "0.2.0",
+      description: null,
+      enabled: false,
+      source: "/workspace/demo",
+      requested_ref: null,
+      resolved_ref: null,
+      repo_path: null,
+      installed_at: "2026-09-24T00:00:00Z",
+      install_path: "/tmp/demo",
+    });
+    const setEnabled = vi.spyOn(CanvasExtensionsService, "setEnabled");
+
+    const { result } = renderHook(() => useRefreshCanvasExtension(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({
+      name: "demo",
+      version: "0.1.0",
+      enabled: false,
+      source: "/workspace/demo",
+      requested_ref: null,
+      resolved_ref: null,
+      repo_path: null,
+      installed_at: "2026-09-23T00:00:00Z",
+      install_path: "/tmp/demo",
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(setEnabled).not.toHaveBeenCalled();
   });
 });
