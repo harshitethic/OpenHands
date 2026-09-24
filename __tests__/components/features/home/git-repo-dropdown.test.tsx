@@ -50,11 +50,13 @@ vi.mock("#/hooks/query/use-config", () => ({
 
 const homeStore = vi.hoisted(() => ({
   recentRepositories: [] as GitRepository[],
+  recentRepositoriesByScope: {} as Record<string, GitRepository[]>,
 }));
 
-// Mock useHomeStore
+// Mock useHomeStore, including Zustand's selector form used by the real component.
 vi.mock("#/stores/home-store", () => ({
-  useHomeStore: () => homeStore,
+  useHomeStore: (selector?: (state: typeof homeStore) => unknown) =>
+    selector ? selector(homeStore) : homeStore,
 }));
 
 const MOCK_REPOSITORIES: GitRepository[] = [
