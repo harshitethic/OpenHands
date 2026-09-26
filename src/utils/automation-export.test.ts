@@ -102,6 +102,7 @@ describe("automation export files", () => {
         enabled: "yes",
         trigger: { type: "event", source: 42, on: [] },
         plugins: ["github:openhands/extensions", 42],
+        agent_profile_id: false,
         model: false,
         timeout: -5,
       },
