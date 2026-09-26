@@ -159,6 +159,9 @@ export function serializeAutomation(a: Automation): AutomationExportFile {
     enabled: a.enabled,
     prompt: a.prompt,
     ...(a.repository !== undefined && { repository: a.repository }),
+    ...(a.agent_profile_id !== undefined && {
+      agent_profile_id: a.agent_profile_id,
+    }),
     ...(a.model !== undefined && { model: a.model }),
     ...(a.timeout != null && { timeout: a.timeout }),
     ...(a.branch !== undefined && { branch: a.branch }),
