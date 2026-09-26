@@ -1484,6 +1484,30 @@ describe("agent_settings runtime services suffix", () => {
     expect(Array.isArray(payload.agent_settings.agent_context.skills)).toBe(
       true,
     );
+    expect(
+      payload.agent_settings.agent_context.system_message_suffix,
+    ).toBeUndefined();
+  });
+
+  it("preserves a stored system_message_suffix when runtime info is absent", () => {
+    const payload = buildStartConversationRequest({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        agent_settings: {
+          ...DEFAULT_SETTINGS.agent_settings,
+          agent_context: {
+            system_message_suffix: "MARKER-GLOBAL-RULES",
+          },
+        },
+      },
+      query: "hello",
+    }) as {
+      agent_settings: { agent_context: Record<string, unknown> };
+    };
+
+    expect(payload.agent_settings.agent_context.system_message_suffix).toBe(
+      "MARKER-GLOBAL-RULES",
+    );
   });
 
   it("sets system_message_suffix when backend runtime info is provided", () => {
@@ -1509,6 +1533,33 @@ describe("agent_settings runtime services suffix", () => {
     expect(
       payload.agent_settings.agent_context.system_message_suffix as string,
     ).toContain("<RUNTIME_SERVICES>");
+  });
+
+  it("appends runtime services after a stored system_message_suffix", () => {
+    const payload = buildStartConversationRequest({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        agent_settings: {
+          ...DEFAULT_SETTINGS.agent_settings,
+          agent_context: {
+            system_message_suffix: "MARKER-GLOBAL-RULES",
+          },
+        },
+      },
+      query: "hello",
+      runtimeServicesInfo: {
+        mode: "dev:automation",
+        services: {
+          agent_server: { url_from_agent: "http://localhost:18000" },
+        },
+      },
+    }) as {
+      agent_settings: { agent_context: Record<string, unknown> };
+    };
+
+    const suffix = payload.agent_settings.agent_context
+      .system_message_suffix as string;
+    expect(suffix).toContain("MARKER-GLOBAL-RULES\n\n<RUNTIME_SERVICES>");
   });
 });
 
