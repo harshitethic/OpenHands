@@ -356,6 +356,52 @@ describe("AutomationService.createAutomation", () => {
       expect.any(Object),
     );
   });
+
+  it("uses agent_profile_id instead of the legacy model on local import", async () => {
+    const agentProfileId = "11111111-1111-4111-8111-111111111111";
+
+    await AutomationService.createAutomation({
+      ...spec,
+      agent_profile_id: agentProfileId,
+    });
+
+    expect(localAxios.post).toHaveBeenCalledWith(
+      "/api/automation/v1/preset/plugin",
+      expect.objectContaining({
+        agent_profile_id: agentProfileId,
+        model: undefined,
+      }),
+      expect.any(Object),
+    );
+    const createBody = localAxios.post.mock.calls[0]?.[1];
+    expect(createBody).not.toHaveProperty("model");
+  });
+
+  it("uses agent_profile_id instead of the legacy model on cloud import", async () => {
+    const agentProfileId = "11111111-1111-4111-8111-111111111111";
+    setRegisteredBackends([cloudBackend]);
+    setActiveSelection({ backendId: cloudBackend.id, orgId: "org-1" });
+    callCloudProxy
+      .mockResolvedValueOnce(createdAutomation)
+      .mockResolvedValueOnce({ ...createdAutomation, enabled: false });
+
+    await AutomationService.createAutomation({
+      ...spec,
+      agent_profile_id: agentProfileId,
+    });
+
+    expect(callCloudProxy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        method: "POST",
+        body: expect.objectContaining({
+          agent_profile_id: agentProfileId,
+        }),
+      }),
+    );
+    const createRequest = callCloudProxy.mock.calls[0]?.[0];
+    expect(createRequest.body).not.toHaveProperty("model");
+  });
 });
 
 const gitSyncStatus: GitSyncStatus = {
