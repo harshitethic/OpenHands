@@ -128,6 +128,7 @@ describe("automation export files", () => {
           "spec.trigger.on: expected a string or a non-empty array of strings",
           "spec.trigger.on: required for an event trigger",
           "spec.plugins: expected an array of non-empty strings",
+          "spec.agent_profile_id: expected a non-empty string or null",
           "spec.model: expected a non-empty string or null",
           "spec.timeout: expected a positive integer",
         ]),
