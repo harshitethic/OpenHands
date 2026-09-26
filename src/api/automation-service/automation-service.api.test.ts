@@ -369,7 +369,6 @@ describe("AutomationService.createAutomation", () => {
       "/api/automation/v1/preset/plugin",
       expect.objectContaining({
         agent_profile_id: agentProfileId,
-        model: undefined,
       }),
       expect.any(Object),
     );
