@@ -159,6 +159,9 @@ export function serializeAutomation(a: Automation): AutomationExportFile {
     enabled: a.enabled,
     prompt: a.prompt,
     ...(a.repository !== undefined && { repository: a.repository }),
+    ...(a.agent_profile_id !== undefined && {
+      agent_profile_id: a.agent_profile_id,
+    }),
     ...(a.model !== undefined && { model: a.model }),
     ...(a.timeout != null && { timeout: a.timeout }),
     ...(a.branch !== undefined && { branch: a.branch }),
@@ -239,6 +242,23 @@ export function parseAutomationFile(json: unknown): AutomationSpec {
     issues,
   );
 
+  let agentProfileId: string | null | undefined;
+  if (
+    json.spec.agent_profile_id === null ||
+    json.spec.agent_profile_id === undefined
+  ) {
+    agentProfileId = json.spec.agent_profile_id;
+  } else if (
+    typeof json.spec.agent_profile_id === "string" &&
+    json.spec.agent_profile_id.trim().length > 0
+  ) {
+    agentProfileId = json.spec.agent_profile_id;
+  } else {
+    issues.push(
+      "spec.agent_profile_id: expected a non-empty string or null",
+    );
+  }
+
   let model: string | null | undefined;
   if (json.spec.model === null || json.spec.model === undefined) {
     model = json.spec.model;
@@ -288,6 +308,9 @@ export function parseAutomationFile(json: unknown): AutomationSpec {
     trigger,
     enabled: enabled as boolean,
     ...(repository !== undefined && { repository }),
+    ...(agentProfileId !== undefined && {
+      agent_profile_id: agentProfileId,
+    }),
     ...(model !== undefined && { model }),
     ...(timeout !== undefined && { timeout }),
     ...(branch !== undefined && { branch }),

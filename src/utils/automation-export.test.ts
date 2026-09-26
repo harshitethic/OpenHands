@@ -79,6 +79,19 @@ describe("automation export files", () => {
     expect(parseAutomationFile(exported).timeout).toBe(900);
   });
 
+  it("round-trips the selected agent profile", () => {
+    const agentProfileId = "11111111-1111-4111-8111-111111111111";
+    const exported = serializeAutomation({
+      ...cronAutomation,
+      agent_profile_id: agentProfileId,
+    });
+
+    expect(exported.spec.agent_profile_id).toBe(agentProfileId);
+    expect(parseAutomationFile(exported).agent_profile_id).toBe(
+      agentProfileId,
+    );
+  });
+
   it("reports every malformed field with its path", () => {
     const malformed = {
       version: 2,
@@ -89,6 +102,7 @@ describe("automation export files", () => {
         enabled: "yes",
         trigger: { type: "event", source: 42, on: [] },
         plugins: ["github:openhands/extensions", 42],
+        agent_profile_id: false,
         model: false,
         timeout: -5,
       },
@@ -114,6 +128,7 @@ describe("automation export files", () => {
           "spec.trigger.on: expected a string or a non-empty array of strings",
           "spec.trigger.on: required for an event trigger",
           "spec.plugins: expected an array of non-empty strings",
+          "spec.agent_profile_id: expected a non-empty string or null",
           "spec.model: expected a non-empty string or null",
           "spec.timeout: expected a positive integer",
         ]),
