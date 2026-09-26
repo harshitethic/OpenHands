@@ -242,6 +242,23 @@ export function parseAutomationFile(json: unknown): AutomationSpec {
     issues,
   );
 
+  let agentProfileId: string | null | undefined;
+  if (
+    json.spec.agent_profile_id === null ||
+    json.spec.agent_profile_id === undefined
+  ) {
+    agentProfileId = json.spec.agent_profile_id;
+  } else if (
+    typeof json.spec.agent_profile_id === "string" &&
+    json.spec.agent_profile_id.trim().length > 0
+  ) {
+    agentProfileId = json.spec.agent_profile_id;
+  } else {
+    issues.push(
+      "spec.agent_profile_id: expected a non-empty string or null",
+    );
+  }
+
   let model: string | null | undefined;
   if (json.spec.model === null || json.spec.model === undefined) {
     model = json.spec.model;
