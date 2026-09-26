@@ -79,6 +79,19 @@ describe("automation export files", () => {
     expect(parseAutomationFile(exported).timeout).toBe(900);
   });
 
+  it("round-trips the selected agent profile", () => {
+    const agentProfileId = "11111111-1111-4111-8111-111111111111";
+    const exported = serializeAutomation({
+      ...cronAutomation,
+      agent_profile_id: agentProfileId,
+    });
+
+    expect(exported.spec.agent_profile_id).toBe(agentProfileId);
+    expect(parseAutomationFile(exported).agent_profile_id).toBe(
+      agentProfileId,
+    );
+  });
+
   it("reports every malformed field with its path", () => {
     const malformed = {
       version: 2,
