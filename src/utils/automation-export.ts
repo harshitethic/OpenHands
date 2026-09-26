@@ -308,6 +308,9 @@ export function parseAutomationFile(json: unknown): AutomationSpec {
     trigger,
     enabled: enabled as boolean,
     ...(repository !== undefined && { repository }),
+    ...(agentProfileId !== undefined && {
+      agent_profile_id: agentProfileId,
+    }),
     ...(model !== undefined && { model }),
     ...(timeout !== undefined && { timeout }),
     ...(branch !== undefined && { branch }),
