@@ -14,6 +14,7 @@ import { isNoBackend } from "#/api/backend-registry/active-store";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useCanvasExtensions } from "#/hooks/query/use-canvas-extensions";
 import {
+  useRefreshCanvasExtension,
   useSetCanvasExtensionEnabled,
   useUninstallCanvasExtension,
 } from "#/hooks/mutation/use-manage-canvas-extensions";
@@ -41,6 +42,7 @@ export default function CanvasExtensionsScreen() {
   const [pendingAction, setPendingAction] =
     React.useState<PendingAction | null>(null);
   const query = useCanvasExtensions();
+  const refresh = useRefreshCanvasExtension();
   const setEnabled = useSetCanvasExtensionEnabled();
   const uninstall = useUninstallCanvasExtension();
 
@@ -49,7 +51,8 @@ export default function CanvasExtensionsScreen() {
   const unsupported =
     !backendCanSupportExtensions ||
     isCanvasExtensionsUnsupportedError(query.error);
-  const isBusy = setEnabled.isPending || uninstall.isPending;
+  const isBusy =
+    refresh.isPending || setEnabled.isPending || uninstall.isPending;
 
   const confirmAction = () => {
     if (!pendingAction) return;
@@ -184,6 +187,7 @@ export default function CanvasExtensionsScreen() {
                         setPendingAction({ type: "enable", extension });
                       }
                     }}
+                    onRefresh={() => refresh.mutate(extension)}
                     onUninstall={() =>
                       setPendingAction({ type: "uninstall", extension })
                     }
