@@ -79,6 +79,7 @@ describe("AgentServerConversationService.condenseConversation", () => {
       expect.objectContaining({
         host: buildHttpBaseUrl(RUNTIME_URL),
         apiKey: "sess-key",
+        timeout: 300_000,
       }),
     );
     expect(mockCondenseConversation).toHaveBeenCalledWith("conv-1");
@@ -114,6 +115,7 @@ describe("AgentServerConversationService.condenseConversation", () => {
       expect.objectContaining({
         host: buildHttpBaseUrl(RUNTIME_URL),
         apiKey: "sess-key",
+        timeout: 300_000,
       }),
     );
     expect(callCloudProxy).not.toHaveBeenCalled();
