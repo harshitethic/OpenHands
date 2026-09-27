@@ -57,7 +57,10 @@ interface UseAwaitContextCompactionOptions {
 /**
  * Waits for a post-request Condensation event (and ideally a lower
  * `per_turn_token` in the live metrics store), then reports how many tokens
- * were freed. The HTTP `/condense` ack only means work *started*.
+ * were freed. The HTTP `/condense` response arrives after server-side
+ * condensation finishes; the event may therefore already be in the store by
+ * the time this watcher starts, which is why callers capture baseline ids
+ * before sending the request.
  */
 export function useAwaitContextCompaction({
   beforeToken,
