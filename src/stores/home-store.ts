@@ -4,14 +4,19 @@ import { GitRepository } from "#/types/git";
 import { Provider } from "#/types/settings";
 
 interface HomeState {
+  /** Legacy unscoped recents kept for callers outside the backend-aware Home flow. */
   recentRepositories: GitRepository[];
+  recentRepositoriesByScope: Record<string, GitRepository[]>;
   lastSelectedProvider: Provider | null;
 }
 
 interface HomeActions {
-  addRecentRepository: (repository: GitRepository) => void;
-  clearRecentRepositories: () => void;
-  getRecentRepositories: () => GitRepository[];
+  addRecentRepository: (
+    repository: GitRepository,
+    scopeKey?: string,
+  ) => void;
+  clearRecentRepositories: (scopeKey?: string) => void;
+  getRecentRepositories: (scopeKey?: string) => GitRepository[];
   setLastSelectedProvider: (provider: Provider | null) => void;
   getLastSelectedProvider: () => Provider | null;
 }
@@ -20,35 +25,64 @@ type HomeStore = HomeState & HomeActions;
 
 const initialState: HomeState = {
   recentRepositories: [],
+  recentRepositoriesByScope: {},
   lastSelectedProvider: null,
 };
+
+function prependRecentRepository(
+  repositories: GitRepository[],
+  repository: GitRepository,
+): GitRepository[] {
+  const filteredRepos = repositories.filter(
+    (repo) => repo.id !== repository.id,
+  );
+  return [repository, ...filteredRepos].slice(0, 3);
+}
 
 export const useHomeStore = create<HomeStore>()(
   persist(
     (set, get) => ({
       ...initialState,
 
-      addRecentRepository: (repository: GitRepository) =>
+      addRecentRepository: (repository: GitRepository, scopeKey?: string) =>
         set((state) => {
-          // Remove the repository if it already exists to avoid duplicates
-          const filteredRepos = state.recentRepositories.filter(
-            (repo) => repo.id !== repository.id,
-          );
+          if (!scopeKey) {
+            return {
+              recentRepositories: prependRecentRepository(
+                state.recentRepositories,
+                repository,
+              ),
+            };
+          }
 
-          // Add the new repository to the beginning and keep only top 3
-          const updatedRepos = [repository, ...filteredRepos].slice(0, 3);
-
+          const scopedRepositories =
+            state.recentRepositoriesByScope[scopeKey] ?? [];
           return {
-            recentRepositories: updatedRepos,
+            recentRepositoriesByScope: {
+              ...state.recentRepositoriesByScope,
+              [scopeKey]: prependRecentRepository(
+                scopedRepositories,
+                repository,
+              ),
+            },
           };
         }),
 
-      clearRecentRepositories: () =>
-        set(() => ({
-          recentRepositories: [],
-        })),
+      clearRecentRepositories: (scopeKey?: string) =>
+        set((state) => {
+          if (!scopeKey) {
+            return { recentRepositories: [] };
+          }
 
-      getRecentRepositories: () => get().recentRepositories,
+          const nextByScope = { ...state.recentRepositoriesByScope };
+          delete nextByScope[scopeKey];
+          return { recentRepositoriesByScope: nextByScope };
+        }),
+
+      getRecentRepositories: (scopeKey?: string) =>
+        scopeKey
+          ? (get().recentRepositoriesByScope[scopeKey] ?? [])
+          : get().recentRepositories,
 
       setLastSelectedProvider: (provider: Provider | null) =>
         set(() => ({

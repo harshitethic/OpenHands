@@ -41,6 +41,7 @@ describe("home store", () => {
       state: {
         lastSelectedProvider: null,
         recentRepositories: [first],
+        recentRepositoriesByScope: {},
       },
       version: 0,
     });
@@ -80,6 +81,23 @@ describe("home store", () => {
       repositories[2],
       repositories[1],
     ]);
+  });
+
+  it("keeps recent repositories isolated by backend and organization scope", async () => {
+    const useHomeStore = await loadFreshHomeStore();
+    const repoA = repository("repo-a");
+    const repoB = repository("repo-b");
+
+    useHomeStore.getState().addRecentRepository(repoA, "cloud-id:org-a");
+    useHomeStore.getState().addRecentRepository(repoB, "cloud-id:org-b");
+
+    expect(
+      useHomeStore.getState().getRecentRepositories("cloud-id:org-a"),
+    ).toEqual([repoA]);
+    expect(
+      useHomeStore.getState().getRecentRepositories("cloud-id:org-b"),
+    ).toEqual([repoB]);
+    expect(useHomeStore.getState().getRecentRepositories()).toEqual([]);
   });
 
   it("clears all recent repositories", async () => {
